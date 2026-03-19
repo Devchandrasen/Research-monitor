@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Country {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  region      String?
+  continent   String?
+  latitude    Float?
+  longitude   Float?
+  
+  // Research stats
+  researchOutput     Int      @default(0)
+  phdPositions       Int      @default(0)
+  postdocPositions   Int      @default(0)
+  fundingAvailable   Float    @default(0)
+  rInvestment        Float    @default(0)
+  
+  opportunities      Opportunity[]
+  fundingCalls       FundingCall[]
+  projects           Project[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ResearchField {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // e.g., "STEM", "Humanities", "Medical", "Social Sciences"
+  description String?
+  
+  projects    Project[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("active") // active, completed, recruiting
+  institution String?
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  
+  field       ResearchField @relation(fields: [fieldId], references: [id])
+  fieldId     String
+  country     Country?      @relation(fields: [countryId], references: [id])
+  countryId   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // "phd", "postdoc", "researcher", "faculty"
+  description String?
+  institution String?
+  deadline    DateTime?
+  salary      Float?
+  currency    String?
+  url         String?
+  
+  country     Country  @relation(fields: [countryId], references: [id])
+  countryId   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FundingCall {
+  id          String   @id @default(cuid())
+  title       String
+  funder      String?
+  description String?
+  deadline    DateTime?
+  amount      Float?
+  currency    String?
+  url         String?
+  focusArea   String?
+  
+  country     Country  @relation(fields: [countryId], references: [id])
+  countryId   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ResearchMetric {
+  id          String   @id @default(cuid())
+  metricType  String   // "publications", "citations", "patents", "grants"
+  value       Float
+  period      String   // e.g., "2024-Q1", "2024"
+  
+  countryId   String?
+  fieldId     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
